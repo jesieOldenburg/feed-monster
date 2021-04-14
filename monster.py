@@ -1,7 +1,6 @@
 import urllib.request
 import xml.dom.minidom
 
-
 with urllib.request.urlopen('http://news.yahoo.com/rss/') as response:
     xml_response = response.read()
 
