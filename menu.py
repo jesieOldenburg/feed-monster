@@ -30,3 +30,8 @@ def main_menu_logic():
 
 def display_feeds_table():
     pass
+
+def rss_url_search_menu():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    
+    pass
