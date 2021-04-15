@@ -36,12 +36,15 @@ def display_rss_url_search_menu():
     get_rss_url(feed_to_search) # change this back to this: get_rss_url(RSS_URL_input)
     pass
 
-feed_to_search = 'http://news.yahoo.com/rss/'
+feed_to_search = 'http://feeds.bbci.co.uk/news/business/rss.xml'
+# 'http://feeds.bbci.co.uk/news/world/rss.xml'
+# 'http://www.cbn.com/cbnnews/us/feed/'
+# 'https://thewest.com.au/rss-feeds'
 
 """
-XML documents have the following properties when returned:
+    XML documents have the following properties when returned:
 
-root will be the root tag, for which we can access attributes with that tag as a dictionary of attributes, much like html attributes like id, class etc.
+    root will be the root tag, for which we can access attributes with that tag as a dictionary of attributes, much like html attributes like id, class etc.
 
 """
 
@@ -51,7 +54,8 @@ def get_rss_url(feed_url):
     # TODO: Save the XML response as a var in this function, then call ElementTree.parse() and pass the XML res as an arg
     # This request takes a URL as an argument and opens the url, then parses the response and returns an XML string.
     with urllib.request.urlopen(feed_url) as response:
-        xml_response = response.read() 
+        xml_response = response.read()
+        # print(xml_response, '\n') 
     
     dom = xml.dom.minidom.parseString(xml_response) # Parses the response to a string
     pretty_xml = dom.toprettyxml()
@@ -61,11 +65,23 @@ def get_rss_url(feed_url):
     # tree = ET.parse(pretty_xml)
     # print(tree)
     root = ET.fromstring(pretty_xml)
-    # print(root.attrib)
-    for child in root:
-        article_title = root[0][8][0].text
-        article_link = root[0][8][1].text
-        print(root[0][8][0].text)
-        pass
+    # print('ROOT', root)
+    
+    title_tag_list = root.findall('.//item')
+    print('Title Tag', title_tag_list)
+    print('\n Title Tag Search >>', title_tag_list[0][0].tag, '\n', title_tag_list[0][0].text)
+    
+    # for item in item_tags:
+        
+    #     print(item[0])
+    
+    # for child in root:
+    #     # print('TAG -->' , root[0][0])
+    #     article_title = root[0][8][0].text
+    #     article_link = root[0][8][1].text
+    #     print('Article Title::', article_title)
+    #     print('Article Link::', article_link)
+        
+    #     pass
     
     pass
