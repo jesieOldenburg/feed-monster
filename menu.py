@@ -2,8 +2,21 @@ import os
 import urllib.request
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
+import shelve
 from prettytable import PrettyTable
+
+# TODO Use shelve to persist my data
+
 PT = PrettyTable()
+
+s = shelve.open('test.db')
+try:
+    s['test_dict'] = {'a': '1', 'b': '2', 'c': '3'}
+    dbtest = s['test_dict']
+finally:
+    s.close()
+
+print(dbtest)
 
 def create_main_menu():
     os.system('cls' if os.name == 'nt' else 'clear')
