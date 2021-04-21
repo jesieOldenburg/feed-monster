@@ -3,20 +3,21 @@ import urllib.request
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
 import shelve
+import pprint
 from prettytable import PrettyTable
 
 # TODO Use shelve to persist my data
 
 PT = PrettyTable()
 
-s = shelve.open('test.db')
-try:
-    s['test_dict'] = {'a': '1', 'b': '2', 'c': '3'}
-    dbtest = s['test_dict']
-finally:
-    s.close()
+# s = shelve.open('test.db')
+# try:
+#     s['test_dict'] = {'a': '1', 'b': '2', 'c': '3'}
+#     dbtest = s['test_dict']
+# finally:
+#     s.close()
 
-print(dbtest)
+# print(dbtest)
 
 def create_main_menu():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -41,14 +42,12 @@ def main_menu_logic():
 
 def display_feeds_table():
     # TODO Need to try and format my own table. Draw it out first
-    # print('|' + '--' * 76 + '| \n')
-    # print('|' + '--' * 76 + '|')
     PT.field_names = ['Title', 'Description', 'Link']
     # print(PT)
     pass
 
-def create_table_rows(ti, de, li):
-    PT.add_row([ti, de, li])
+def create_table_rows(title, desc, link):
+    PT.add_row([title, desc, link])
     
 
 def display_rss_url_search_menu():
@@ -58,10 +57,11 @@ def display_rss_url_search_menu():
     get_rss_url(feed_to_search) # change this back to this: get_rss_url(RSS_URL_input)
     pass
 
-feed_to_search = 'http://www.cbn.com/cbnnews/us/feed/'
+feed_to_search = 'https://www.nytimes.com/svc/collections/v1/publish/https://www.nytimes.com/section/world/rss.xml'
 # ? Test Feed URL: 'http://feeds.bbci.co.uk/news/world/rss.xml'
 # ? Test Feed URL: 'http://www.cbn.com/cbnnews/us/feed/'
 # ? Test Feed URL: 'https://thewest.com.au/rss-feeds'
+# ? Test Feed URL: 'https://www.nytimes.com/svc/collections/v1/publish/https://www.nytimes.com/section/world/rss.xml'
 
 """
     XML documents have the following properties when returned:
@@ -70,22 +70,48 @@ feed_to_search = 'http://www.cbn.com/cbnnews/us/feed/'
 
 """
 
+def store_data(title, link):
+    # Needs to use shelve to persist the data
+    print('DATA IN STORAGE FUNC =>', title, link)
+    SH = shelve.open('feeds.db', writeback=True)
+    print('FEEDS', SH.keys())
+    try:
+        SH['feeds'][title] = link
+        SUBBED_FEEDS = SH['feeds']
+    finally:
+        SH.close()
+    print('SUB FEED', SUBBED_FEEDS)
+
+# master_dict = {
+#     'feeds': {}
+# }
+
 def parse_XML(xml_str):
     # TODO: typecheck the root tag to be <rss>
     root = ET.fromstring(xml_str) # grabs the root tag from the XML response [str], which will always be an RSS tag
-    title_tag_list = root.findall('.//item') # Finds all tags named item in the XML response
+    feed_title = root.find('.//title').text
+    # print(feed_title)
+    feed_link = root.find('.//link').text
+    # print(feed_link)
+    item_tag_list = root.findall('.//item') # Finds all tags named item in the XML response
     display_feeds_table()
-    # TODO These values will need to be stored in a separate data structure.  The values will need to be pulled for displaying in the feeds table when the user inits the menu. Consider creating a function that fetches a few URLs once the program is ran, and loads those into the table.
-    for item_tag in title_tag_list[1:11]: # limit the results to ten 
-        article_title = item_tag[0].text[:10]
-        # print('TITLE ==>', article_title[:50])
-        article_description = item_tag[1].text[:10]
+    store_data(feed_title, feed_link)
+    pass
+    # TODO These values will need to be stored in a separate data structure.  The values will need to be pulled for displaying in the feeds table when the user inits the menu. 
+
+    # ? Consider creating a function that fetches a few URLs once the program is ran, and loads those into the table.
+    for item_tag in item_tag_list[:11]: # limit the results to ten 
+        article_title = item_tag.find('title').text
+        # print('TITLE ==>', article_title[:150])
+        article_description = item_tag.find('description').text[:20]
         # print('DESC ==>', article_description)
-        article_link = item_tag[3].tag # Change me back to link # TODO: Figure out how to put the url into a different string
-        print('LINK ==>', item_tag[3])
-        create_table_rows(article_title, article_description, article_link)
+        article_URL = item_tag.find('link').text # Change me back to link # TODO: Figure out how to put the url into a different string
+        link_text = 'Link to Article'
+        hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
+        # print('LINK ==>', hyperlink)
+        create_table_rows(article_title, article_description, hyperlink) # ! This will need to move. TEST ONLY!
         pass
-    print(PT)
+    # print(PT) # ! UNCOMMENT ME
     # display_feeds_table(article_title, article_description, article_link)
     # TODO: Display a prompt asking if the user would like to enter another url, or return to the main menu. Offer this choice as a Y/n option
     # ! Remove this after using as a test case. 
@@ -106,7 +132,6 @@ def get_rss_url(feed_url):
     dom = xml.dom.minidom.parseString(xml_response) # Parses the response to a string
     xml_response = dom.toprettyxml() # Prettify the response
     parse_XML(xml_response)
-
     # user_passed_URL = feed_url
     # tree = ET.parse(pretty_xml)
     # print(tree)
