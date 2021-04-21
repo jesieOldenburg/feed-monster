@@ -10,35 +10,40 @@ from prettytable import PrettyTable
 
 PT = PrettyTable()
 
-# s = shelve.open('test.db')
-# try:
-#     s['test_dict'] = {'a': '1', 'b': '2', 'c': '3'}
-#     dbtest = s['test_dict']
-# finally:
-#     s.close()
-
-# print(dbtest)
-
 def create_main_menu():
     os.system('cls' if os.name == 'nt' else 'clear')
     # TODO: Write logic for displaying feeds for option 1.
     print("1. Display Subscribed Feeds")
     print("2. Input New RSS URL")
-    print("3. Exit\n")
+    print("3. Exit")
     print("4. Refresh Feeds")
-    print("CHOOSE AN OPTION")
+    print("\nCHOOSE AN OPTION")
     pass
 
 def main_menu_logic():
     create_main_menu()
     menu_selection = input(">> ")
-    # TODO: Write the functions that handle the menu choices in a separate module.
     if menu_selection == "1":
-        display_feeds_table()
+        show_subs()
         pass
     if menu_selection == "2":
         display_rss_url_search_menu()
     pass
+
+def show_subs():
+    print("-" * 19 + "Your Subscribed Feeds" + "-" * 19)
+    SH = shelve.open('feeds.db')
+    feeds_dict = SH['feeds']
+    # print(feeds_dict.items())
+    PT.field_names = ["RSS Feed Name", "RSS URL" ]
+    for feed in feeds_dict.items():
+        f_title = feed[0]
+        f_link = feed[1]
+        PT.add_row([f_title, f_link])
+        pass
+    SH.close()
+    PT.align = "l"
+    print(PT)
 
 def display_feeds_table():
     # TODO Need to try and format my own table. Draw it out first
@@ -63,16 +68,8 @@ feed_to_search = 'https://www.nytimes.com/svc/collections/v1/publish/https://www
 # ? Test Feed URL: 'https://thewest.com.au/rss-feeds'
 # ? Test Feed URL: 'https://www.nytimes.com/svc/collections/v1/publish/https://www.nytimes.com/section/world/rss.xml'
 
-"""
-    XML documents have the following properties when returned:
-
-    root will be the root tag, for which we can access attributes with that tag as a dictionary of attributes, much like html attributes like id, class etc.
-
-"""
-
 def store_data(title, link):
-    # Needs to use shelve to persist the data
-    print('DATA IN STORAGE FUNC =>', title, link)
+    # Uses shelve to persist data
     SH = shelve.open('feeds.db', writeback=True)
     print('FEEDS', SH.keys())
     try:
@@ -82,20 +79,16 @@ def store_data(title, link):
         SH.close()
     print('SUB FEED', SUBBED_FEEDS)
 
-# master_dict = {
-#     'feeds': {}
-# }
-
 def parse_XML(xml_str):
     # TODO: typecheck the root tag to be <rss>
     root = ET.fromstring(xml_str) # grabs the root tag from the XML response [str], which will always be an RSS tag
-    feed_title = root.find('.//title').text
+    feed_provider = root.find('.//title').text
     # print(feed_title)
     feed_link = root.find('.//link').text
     # print(feed_link)
     item_tag_list = root.findall('.//item') # Finds all tags named item in the XML response
     display_feeds_table()
-    store_data(feed_title, feed_link)
+    store_data(feed_provider, feed_link)
     pass
     # TODO These values will need to be stored in a separate data structure.  The values will need to be pulled for displaying in the feeds table when the user inits the menu. 
 
