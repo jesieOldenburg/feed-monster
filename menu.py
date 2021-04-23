@@ -29,6 +29,7 @@ def main_menu_logic():
     pass
 
 def show_subs():
+    os.system('cls' if os.name == 'nt' else 'clear')
     print("-" * 19 + "Your Subscribed Feeds" + "-" * 19)
     SH = shelve.open('feeds.db')
     feeds_dict = SH['feeds']
@@ -55,9 +56,9 @@ def show_subs():
     print('Which Feed would you like to view?')
     choice = input(">> ")
 
-    if choice == "1":
-        url_choice = callable_feeds['2']
-        pull_subbed_RSS(url_choice)
+    url_choice = callable_feeds[choice]
+    pull_subbed_RSS(url_choice)
+    # if choice == "1":
 
 def display_feeds_table():
     # TODO Need to try and format my own table. Draw it out first
@@ -116,18 +117,16 @@ def parse_XML(xml_str, whocall):
     if whocall == "pull_subs":
         PT.align = 'l'
         display_feeds_table()
-        print('2... pull subs called me')
+        # print('2... pull subs called me')
+
         for item_tag in item_tag_list[:11]: # limit the results to ten 
             article_title = item_tag.find('title').text[:20]
-            # print('TITLE ==>', article_title[:150])
             article_description = item_tag.find('description').text[:20]
-            # print('DESC ==>', article_description)
             article_URL = item_tag.find('link').text
-            link_text = 'Link to Article'
-            
-            hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a" + " ---->>"
-            # print('LINK ==>', hyperlink)
-            create_table_rows(article_title, article_description, hyperlink) # ! This will need to move. TEST ONLY!
+            link_text = 'Link'
+            hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
+            # print(hyperlink)
+            create_table_rows(article_title, article_description, hyperlink)
         print(PT) # ! UNCOMMENT ME
         # TODO Add input() for the user to go back to the feeds menu and choose another feed
 
@@ -139,8 +138,6 @@ def get_rss_url(feed_url, whocall):
         feed_url (string): A url represented as a string
         whocall (string): A keyword argument used in a logical statement
     """    
-    # TODO: Save the XML response as a var in this function, then call ElementTree.parse() and pass the XML res as an arg
-    # This request takes a URL as an argument and opens the url, then parses the response and returns an XML string.
     try:
         with urllib.request.urlopen(feed_url) as response:
             xml_response = response.read()
@@ -157,7 +154,6 @@ def get_rss_url(feed_url, whocall):
         pass
     if whocall == "pull_subs":
         PT.clear_rows()
-        print('1... pull subs called me')
         parse_XML(xml_response, whocall="pull_subs")
     #     # TODO Write logic for pulling the subs
     #     pass
@@ -166,8 +162,8 @@ def get_rss_url(feed_url, whocall):
     # print(tree)
     
 def pull_subbed_RSS(url):
-    print('UUAREELLL')
+    os.system('cls' if os.name == 'nt' else 'clear')
+    # print('UUAREELLL')
     feed_to_pull = url
-    print(feed_to_pull)
     get_rss_url(feed_to_pull, whocall="pull_subs")
     pass
