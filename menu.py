@@ -2,6 +2,7 @@ import os
 import urllib.request
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
+from bs4 import BeautifulSoup
 import shelve
 import pprint
 from prettytable import PrettyTable
@@ -78,7 +79,7 @@ def display_rss_url_search_menu():
     get_rss_url(feed_to_search, whocall="url_search") # change this back to this: get_rss_url(RSS_URL_input)
     pass
 
-feed_to_search = 'http://feeds.bbci.co.uk/news/world/rss.xml'
+feed_to_search = "https://www.yahoo.com/news/rss/world"
 # ? Test Feed URL: 'http://feeds.bbci.co.uk/news/world/rss.xml'
 # ? Test Feed URL: 'http://www.cbn.com/cbnnews/us/feed/'
 # ? Test Feed URL: 'https://thewest.com.au/rss-feeds'
@@ -141,20 +142,20 @@ def get_rss_url(feed_url, whocall):
     try:
         with urllib.request.urlopen(feed_url) as response:
             xml_response = response.read()
-    except:
-        print('An exception occurred')
-        # print(xml_response, '\n')
+    except Exception as e:
+        print('An exception occurred', )
 
-    dom = xml.dom.minidom.parseString(xml_response) # Parses the response to a string
-    xml_response = dom.toprettyxml() # Prettify the response
-    # print(xml_response)
+    parser = ET.XMLParser(recover=True, encoding="utf-8")
+    # dom = xml.dom.minidom.parseString(xml_response) # Parses the response to a string
+    xml_data = ET.fromstring(xml_response, parser=parser)  # Prettify the response
+    print(xml_data)
     if whocall == "url_search":
         print("search called me ")
         parse_XML(xml_response, whocall="url_search")
         pass
     if whocall == "pull_subs":
         PT.clear_rows()
-        parse_XML(xml_response, whocall="pull_subs")
+        # parse_XML(xml_response, whocall="pull_subs")
     #     # TODO Write logic for pulling the subs
     #     pass
     # user_passed_URL = feed_url
@@ -163,7 +164,6 @@ def get_rss_url(feed_url, whocall):
     
 def pull_subbed_RSS(url):
     os.system('cls' if os.name == 'nt' else 'clear')
-    # print('UUAREELLL')
     feed_to_pull = url
     get_rss_url(feed_to_pull, whocall="pull_subs")
     pass
