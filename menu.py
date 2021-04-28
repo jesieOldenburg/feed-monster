@@ -2,7 +2,6 @@ import os
 import urllib.request
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
-from bs4 import BeautifulSoup
 import shelve
 import pprint
 from prettytable import PrettyTable
@@ -44,7 +43,8 @@ def show_subs():
         item_nums += 1
         f_title = feed[0]
         f_link = feed[1]
-        print("F_LINK", f_link)
+        # print("FLINT", f_link)
+        
         callable_feeds[str(item_nums)] = f_link
         
         PT.add_row([item_nums, f_title, f_link])
@@ -79,11 +79,11 @@ def display_rss_url_search_menu():
     get_rss_url(feed_to_search, whocall="url_search") # change this back to this: get_rss_url(RSS_URL_input)
     pass
 
-feed_to_search = "https://www.yahoo.com/news/rss/world"
-# ? Test Feed URL: 'http://feeds.bbci.co.uk/news/world/rss.xml'
-# ? Test Feed URL: 'http://www.cbn.com/cbnnews/us/feed/'
-# ? Test Feed URL: 'https://thewest.com.au/rss-feeds'
-# ? Test Feed URL: 'https://www.nytimes.com/svc/collections/v1/publish/https://www.nytimes.com/section/world/rss.xml'
+feed_to_search = "https://www.buzzfeed.com/world.xml"
+# ? 'http://feeds.bbci.co.uk/news/world/rss.xml'
+# ? 'http://www.cbn.com/cbnnews/us/feed/'
+# ? 'https://thewest.com.au/rss-feeds'
+# ? 'https://www.nytimes.com/svc/collections/v1/publish/https://www.nytimes.com/section/world/rss.xml'
 
 def store_data(title, link):
     # Uses shelve to persist data
@@ -91,20 +91,15 @@ def store_data(title, link):
     # print('FEEDS', SH.keys())
     try:
         SH['feeds'][title] = link
-        SUBBED_FEEDS = SH['feeds']
     finally:
         SH.close()
     print("URL ADDED SUCCESSFULLY!!")
 
-def parse_XML(bs, whocall):
+def parse_XML(xml_str, vURL, whocall):
     # TODO: typecheck the root tag to be <rss>
-    # root = ET.fromstring(xml_str) # grabs the root tag from the XML response [str], which will always be an RSS tag
-    root = bs.rss # grabs the root tag from the XML response [str], which will always be an RSS tag
-    # print(root)
-    # feed_provider = root.find('.//title').text
-    feed_provider = root.channel.title.string
-    print("feed pro", feed_provider)
-    feed_link = root.find('.//link').text
+    root = ET.fromstring(xml_str) # grabs the root tag from the XML response [str], which will always be an RSS tag
+    feed_provider = root.find('.//title').text
+    feed_link = vURL
     item_tag_list = root.findall('.//item') # Finds all tags named item in the XML response
     # display_feeds_table()
     if whocall == "url_search":
@@ -124,9 +119,10 @@ def parse_XML(bs, whocall):
         display_feeds_table()
         # print('2... pull subs called me')
 
-        for item_tag in item_tag_list[:11]: # limit the results to ten 
+        for item_tag in item_tag_list: # limit the results to ten 
             article_title = item_tag.find('title').text[:20]
-            article_description = item_tag.find('description').text[:20]
+            article_description = item_tag.find('description').text
+            print("<<<<>>>>>>" , type(article_description))
             article_URL = item_tag.find('link').text
             link_text = 'Link'
             hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
@@ -145,28 +141,21 @@ def get_rss_url(feed_url, whocall):
     """    
     try:
         with urllib.request.urlopen(feed_url) as response:
-            # print("RESPONSE", response)
             xml_response = response.read()
-            soup = BeautifulSoup(xml_response, "lxml")
-            # print("CONTENT:: >>", soup.rss)
-            # return soup
-    except Exception as e:
-        print('An exception occurred', e)
+    except:
+        print('An exception occurred')
+        # print(xml_response, '\n')
 
-    # parser = ET.XMLParser(encoding="utf-8")
-    # dom = xml.dom.minidom.parseString(xml_response) # Parses the response to a string
-    # print(type(dom))
-    # xml_data = ET.fromstring(xml_response, parser=parser)  # Prettify the response
-    # print('SOUP', soup)
-    # root = xml_data.root()
-    # print('XML', xml_data)
+    dom = xml.dom.minidom.parseString(xml_response) # Parses the response to a string
+    xml_response = dom.toprettyxml() # Prettify the response
+    # print(xml_response)
     if whocall == "url_search":
         print("search called me ")
-        parse_XML(soup, whocall="url_search")
+        parse_XML(xml_response, feed_url, whocall="url_search")
         pass
     if whocall == "pull_subs":
         PT.clear_rows()
-        # parse_XML(soup, whocall="pull_subs")
+        parse_XML(xml_response, feed_url, whocall="pull_subs")
     #     # TODO Write logic for pulling the subs
     #     pass
     # user_passed_URL = feed_url
@@ -175,6 +164,7 @@ def get_rss_url(feed_url, whocall):
     
 def pull_subbed_RSS(url):
     os.system('cls' if os.name == 'nt' else 'clear')
-    print(url)
-    get_rss_url(url, whocall="pull_subs")
+    # print('UUAREELLL')
+    feed_to_pull = url
+    get_rss_url(feed_to_pull, whocall="pull_subs")
     pass
