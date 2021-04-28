@@ -79,7 +79,7 @@ def display_rss_url_search_menu():
     get_rss_url(feed_to_search, whocall="url_search") # change this back to this: get_rss_url(RSS_URL_input)
     pass
 
-feed_to_search = "https://www.buzzfeed.com/world.xml"
+feed_to_search = "http://rss.cnn.com/rss/edition_world.rss"
 # ? 'http://feeds.bbci.co.uk/news/world/rss.xml'
 # ? 'http://www.cbn.com/cbnnews/us/feed/'
 # ? 'https://thewest.com.au/rss-feeds'
@@ -118,11 +118,13 @@ def parse_XML(xml_str, vURL, whocall):
         PT.align = 'l'
         display_feeds_table()
         # print('2... pull subs called me')
-
-        for item_tag in item_tag_list: # limit the results to ten 
+        # TODO: If the description tag has other tags within it, i.e. an <h1> tag, parse those tags out with a conditional.
+        # TODO: Get the len() of the item list and display a limited number of results first, then allow the user to scroll through the table, i.e. enter for next page.
+        # TODO: Add a value check condition to evaluate if the fields contain values, and what to do if not, such as return a string of "No [field_name] provided"
+        for item_tag in item_tag_list[:5]: # limit the results to ten 
             article_title = item_tag.find('title').text[:20]
-            article_description = item_tag.find('description').text
-            print("<<<<>>>>>>" , type(article_description))
+            article_description = item_tag.find('description').text[:20]
+            print("<<<<>>>>>>" , article_description)
             article_URL = item_tag.find('link').text
             link_text = 'Link'
             hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
