@@ -9,9 +9,8 @@ from prettytable import PrettyTable
 
 PT = PrettyTable()
 
-def create_main_menu():
+def create_main_menu():        
     os.system('cls' if os.name == 'nt' else 'clear')
-    # TODO: Write logic for displaying feeds for option 1.
     print("1. Display Subscribed Feeds")
     print("2. Input New RSS URL")
     print("3. Delete Feed")
@@ -30,9 +29,15 @@ def main_menu_logic():
     if menu_selection == "3":
         unsubscribe_menu()
         pass
-    pass
+    if menu_selection == "4":
+        pass
 
 def delete_feed(key):
+    """This function will open an instance of the shelve database file and delete the selected key from the dictionary stored on disk
+
+    Args:
+        key [dict key]: A dictionary key passed to the function
+    """    
     SH = shelve.open('feeds.db', writeback=True)
     feed_dict = SH['feeds']
     # print("FEED DICT IN DEL", key)
@@ -43,6 +48,8 @@ def delete_feed(key):
     pass
 
 def unsubscribe_menu():
+    """A simple function that handles the logic of deleting an item from the Shelve stored dictionary
+    """    
     show_subs(whocall="unsubscribe_menu")
     pass
 
@@ -71,11 +78,15 @@ def show_subs(whocall):
     print(PT)
     
     if whocall == "main_menu":
+        print("Type 'main' to return to the main menu")
         print('Which Feed would you like to view?')
         choice = input(">> ")
-        url_choice = callable_feeds[choice]
-        pull_subbed_RSS(url_choice)
-    
+        if choice.lower() == "main":
+            main_menu_logic()
+        else:
+            url_choice = callable_feeds[choice]
+            pull_subbed_RSS(url_choice)
+
     if whocall == "unsubscribe_menu":
         print('Which Feed would you like to delete?')
         feeds_dict_keys_list = list(feeds_dict)
@@ -91,7 +102,6 @@ def show_subs(whocall):
         pass
 
 def display_feeds_table():
-    # TODO Need to try and format my own table. Draw it out first
     PT.field_names = ["Field Descriptions", "Values", "\n"]
     # print(PT)
     # pass
@@ -197,7 +207,6 @@ def get_rss_url(feed_url, whocall):
     if whocall == "pull_subs":
         PT.clear_rows()
         parse_XML(xml_response, feed_url, whocall="pull_subs")
-    #     # TODO Write logic for pulling the subs
     #     pass
     # user_passed_URL = feed_url
     # tree = ET.parse(pretty_xml)
