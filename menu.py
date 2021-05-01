@@ -28,31 +28,34 @@ def main_menu_logic():
     if menu_selection == "2":
         display_rss_url_search_menu()
     if menu_selection == "3":
-        delete_feed()
+        unsubscribe_menu()
         pass
     pass
 
-def delete_feed():
-    show_subs(whocall="delete_feed")
+def delete_feed(key):
+    SH = shelve.open('feeds.db', writeback=True)
+    feed_dict = SH['feeds']
+    # print("FEED DICT IN DEL", key)
+    print("FEED DICT KEYY", feed_dict[key])
+    del feed_dict[key]
+    SH.close()
+    print(feed_dict)
+    pass
+
+def unsubscribe_menu():
+    show_subs(whocall="unsubscribe_menu")
     pass
 
 def show_subs(whocall):
     os.system('cls' if os.name == 'nt' else 'clear')
-    print("-" * 19 + "Your Subscribed Feeds" + "-" * 19)
-    SH = shelve.open('feeds.db')
-    feeds_dict = SH['feeds']
-    print(feeds_dict)
     PT.field_names = ["SEL #", "RSS Feed Name", "RSS URL" ]
     item_nums = 0 
 
+    SH = shelve.open('feeds.db')
     callable_feeds = dict()
+    feeds_dict = SH['feeds']
+    print("DLKDJFS:", feeds_dict)
 
-    feeds_dict_keys_list = list(feeds_dict)
-    for item in feeds_dict_keys_list:
-        # print(feeds_dict[item])
-        pass
-    
-    
     for feed in feeds_dict.items():
         item_nums += 1
         f_title = feed[0]
@@ -62,20 +65,29 @@ def show_subs(whocall):
         
         PT.add_row([item_nums, f_title, f_link])
     SH.close()
-        
+    
     PT.align = "l"
     PT.align["SEL #"] = "c"
     print(PT)
+    
     if whocall == "main_menu":
         print('Which Feed would you like to view?')
         choice = input(">> ")
         url_choice = callable_feeds[choice]
         pull_subbed_RSS(url_choice)
-    if whocall == "delete_feed":
+    
+    if whocall == "unsubscribe_menu":
         print('Which Feed would you like to delete?')
-        choice = input(">> ")
-        print("FEEDS DICT DELETE TEST", feeds_dict[choice])
+        feeds_dict_keys_list = list(feeds_dict)
+        print("FEEDS DICT DELETE TEST", feeds_dict_keys_list[0])
         
+        choice = input(">> ")
+        INDEX_MODIFIER = int(choice) - 1
+        print("INDEX MOD +>>>", INDEX_MODIFIER)
+        KEY_TO_DEL = feeds_dict_keys_list[INDEX_MODIFIER] # ! The index of the user choice in the list
+        print("Key To Del +++++++", KEY_TO_DEL)
+        delete_feed(KEY_TO_DEL)
+        # ! Find the index of the selection based on choice. Compare to the list
         pass
 
 def display_feeds_table():
