@@ -1,4 +1,5 @@
 import os
+import re
 import urllib.request
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
@@ -8,12 +9,11 @@ from prettytable import PrettyTable
 
 PT = PrettyTable()
 
-def create_main_menu():
+def create_main_menu():        
     os.system('cls' if os.name == 'nt' else 'clear')
-    # TODO: Write logic for displaying feeds for option 1.
     print("1. Display Subscribed Feeds")
     print("2. Input New RSS URL")
-    print("3. Refresh Feeds")
+    print("3. Delete Feed")
     print("4. Exit")
     print("\nCHOOSE AN OPTION")
     pass
@@ -22,49 +22,88 @@ def main_menu_logic():
     create_main_menu()
     menu_selection = input(">> ")
     if menu_selection == "1":
-        show_subs()
+        show_subs(whocall="main_menu")
         pass
     if menu_selection == "2":
         display_rss_url_search_menu()
+    if menu_selection == "3":
+        unsubscribe_menu()
+        pass
+    if menu_selection == "4":
+        pass
+
+def delete_feed(key):
+    """This function will open an instance of the shelve database file and delete the selected key from the dictionary stored on disk
+
+    Args:
+        key [dict key]: A dictionary key passed to the function
+    """    
+    SH = shelve.open('feeds.db', writeback=True)
+    feed_dict = SH['feeds']
+    # print("FEED DICT IN DEL", key)
+    print("FEED DICT KEYY", feed_dict[key])
+    del feed_dict[key]
+    SH.close()
+    print(feed_dict)
     pass
 
-def show_subs():
+def unsubscribe_menu():
+    """A simple function that handles the logic of deleting an item from the Shelve stored dictionary
+    """    
+    show_subs(whocall="unsubscribe_menu")
+    pass
+
+def show_subs(whocall):
     os.system('cls' if os.name == 'nt' else 'clear')
-    print("-" * 19 + "Your Subscribed Feeds" + "-" * 19)
-    SH = shelve.open('feeds.db')
-    feeds_dict = SH['feeds']
-    # print(feeds_dict.items())
     PT.field_names = ["SEL #", "RSS Feed Name", "RSS URL" ]
     item_nums = 0 
 
+    SH = shelve.open('feeds.db')
     callable_feeds = dict()
-    
+    feeds_dict = SH['feeds']
+    print("DLKDJFS:", feeds_dict)
+
     for feed in feeds_dict.items():
         item_nums += 1
         f_title = feed[0]
         f_link = feed[1]
-        # print("FLINT", f_link)
         
         callable_feeds[str(item_nums)] = f_link
         
         PT.add_row([item_nums, f_title, f_link])
     SH.close()
-        
-    # print(callable_feeds)
+    
     PT.align = "l"
     PT.align["SEL #"] = "c"
     print(PT)
-    print('Which Feed would you like to view?')
-    choice = input(">> ")
+    
+    if whocall == "main_menu":
+        print("Type 'main' to return to the main menu")
+        print('Which Feed would you like to view?')
+        choice = input(">> ")
+        if choice.lower() == "main":
+            main_menu_logic()
+        else:
+            url_choice = callable_feeds[choice]
+            pull_subbed_RSS(url_choice)
 
-    url_choice = callable_feeds[choice]
-    pull_subbed_RSS(url_choice)
-    # if choice == "1":
+    if whocall == "unsubscribe_menu":
+        print('Which Feed would you like to delete?')
+        feeds_dict_keys_list = list(feeds_dict)
+        print("FEEDS DICT DELETE TEST", feeds_dict_keys_list[0])
+        
+        choice = input(">> ")
+        INDEX_MODIFIER = int(choice) - 1
+        print("INDEX MOD +>>>", INDEX_MODIFIER)
+        KEY_TO_DEL = feeds_dict_keys_list[INDEX_MODIFIER] # ! The index of the user choice in the list
+        print("Key To Del +++++++", KEY_TO_DEL)
+        delete_feed(KEY_TO_DEL)
+        # ! Find the index of the selection based on choice. Compare to the list
+        pass
 
 def display_feeds_table():
-    # TODO Need to try and format my own table. Draw it out first
-    PT.field_names = ["Field Descriptions Column", "Values Column", ""]
-    print(PT)
+    PT.field_names = ["Field Descriptions", "Values", "\n"]
+    # print(PT)
     # pass
 
 def create_table_rows(title, desc, link):
@@ -94,6 +133,7 @@ def store_data(title, link):
     finally:
         SH.close()
     print("URL ADDED SUCCESSFULLY!!")
+
 
 def parse_XML(xml_str, vURL, whocall):
     # TODO: typecheck the root tag to be <rss>
@@ -127,13 +167,15 @@ def parse_XML(xml_str, vURL, whocall):
         for item_tag in item_tag_list[:5]: # limit the results to ten 
             article_title = item_tag.find('title').text
             article_description = item_tag.find('description').text
+            clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
+
             article_URL = item_tag.find('link').text
             link_text = 'Link'
             hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
             # print(hyperlink)
             # create_table_rows(article_title, article_description, hyperlink)
             PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
-            PT.add_row([f"\033[1m Article Description :: \033[0m", article_description, ""])
+            PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
             PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
         PT.border = False
         # PT.header = True
@@ -165,7 +207,6 @@ def get_rss_url(feed_url, whocall):
     if whocall == "pull_subs":
         PT.clear_rows()
         parse_XML(xml_response, feed_url, whocall="pull_subs")
-    #     # TODO Write logic for pulling the subs
     #     pass
     # user_passed_URL = feed_url
     # tree = ET.parse(pretty_xml)
