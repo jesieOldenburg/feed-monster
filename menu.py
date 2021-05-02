@@ -1,5 +1,6 @@
 import os
 import re
+import math
 import urllib.request
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
@@ -15,7 +16,7 @@ def create_main_menu():
     print("2. Input New RSS URL")
     print("3. Delete Feed")
     print("4. Exit")
-    print("\nCHOOSE AN OPTION")
+    print("\n CHOOSE AN OPTION")
     pass
 
 def main_menu_logic():
@@ -61,7 +62,6 @@ def show_subs(whocall):
     SH = shelve.open('feeds.db')
     callable_feeds = dict()
     feeds_dict = SH['feeds']
-    print("DLKDJFS:", feeds_dict)
 
     for feed in feeds_dict.items():
         item_nums += 1
@@ -90,15 +90,11 @@ def show_subs(whocall):
     if whocall == "unsubscribe_menu":
         print('Which Feed would you like to delete?')
         feeds_dict_keys_list = list(feeds_dict)
-        print("FEEDS DICT DELETE TEST", feeds_dict_keys_list[0])
         
         choice = input(">> ")
         INDEX_MODIFIER = int(choice) - 1
-        print("INDEX MOD +>>>", INDEX_MODIFIER)
         KEY_TO_DEL = feeds_dict_keys_list[INDEX_MODIFIER] # ! The index of the user choice in the list
-        print("Key To Del +++++++", KEY_TO_DEL)
         delete_feed(KEY_TO_DEL)
-        # ! Find the index of the selection based on choice. Compare to the list
         pass
 
 def display_feeds_table():
@@ -109,6 +105,53 @@ def display_feeds_table():
 def create_table_rows(title, desc, link):
     PT.add_row([title, desc, link])
     
+def display_articles(f_len, f_list):
+    # TODO: If the description tag has other tags within it, i.e. an <h1> tag, parse those tags out with a conditional.
+        
+    # TODO: Get the len() of the item list and display a limited number of results first, then allow the user to scroll through the table, i.e. enter for next page.
+    
+    # TODO: Add a value check condition to evaluate if the fields contain values, and what to do if not, such as return a string of "No [field_name] provided"
+    
+    slice_start = 0
+    slice_stop = 4
+    
+    for index, item_tag in enumerate(f_list[slice_start:slice_stop]):
+        # print("LEN", f_len)
+        # num_of_pages = math.floor(f_len / 5)
+        # print(num_of_pages)
+        if index <= 4:
+            slice_stop = 5
+            slice_start = 0
+            # print("SLICER", slice_stop, index)
+        elif (index > 4 and slice_stop <= f_len) :
+            slice_start = slice_stop
+            slice_stop = slice_stop + 5            
+            print("Start", slice_start)
+            print("Stop", slice_stop)
+            pass
+        elif slice_stop > f_len:
+            slice_stop = f_len - 1
+            print("HEEEY", slice_stop)
+            break
+            pass
+            
+        # TODO: Need to eval the length of the tag list, then print 5 results per screen, then the result of (len(list) % 5) will be the value of the last splice operation.
+        
+        article_title = item_tag.find('title').text
+        article_description = item_tag.find('description').text
+        clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
+        article_URL = item_tag.find('link').text
+        link_text = 'Link'
+        hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
+
+        PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
+        PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
+        PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
+    PT.border = False
+    # PT.header = True
+    print(PT) # ! UNCOMMENT ME
+    # TODO Add input() for the user to go back to the feeds menu and choose another feed
+    pass
 
 def display_rss_url_search_menu():
     # TODO Type check the input as a URL
@@ -141,12 +184,13 @@ def parse_XML(xml_str, vURL, whocall):
     feed_provider = root.find('.//title').text
     feed_link = vURL
     item_tag_list = root.findall('.//item') # Finds all tags named item in the XML response
-    # display_feeds_table()
+    feed_length = len(item_tag_list)
+    print("FEED LENGTH =====>", feed_length)
     if whocall == "url_search":
         print("search called me ")
         store_data(feed_provider, feed_link)
         
-        print("Would you like to add another RSS URL?","\nY/n?")
+        print("Would you like to add another RSS URL?","\n Y/n?")
         choice = input("")
         
         if choice.lower() == 'y':
@@ -157,30 +201,36 @@ def parse_XML(xml_str, vURL, whocall):
     if whocall == "pull_subs":
         PT.align = 'l'
         display_feeds_table()
+        display_articles(feed_length, item_tag_list)
         # print('2... pull subs called me')
-        # TODO: If the description tag has other tags within it, i.e. an <h1> tag, parse those tags out with a conditional.
+        # # TODO: If the description tag has other tags within it, i.e. an <h1> tag, parse those tags out with a conditional.
         
-        # TODO: Get the len() of the item list and display a limited number of results first, then allow the user to scroll through the table, i.e. enter for next page.
+        # # TODO: Get the len() of the item list and display a limited number of results first, then allow the user to scroll through the table, i.e. enter for next page.
         
-        # TODO: Add a value check condition to evaluate if the fields contain values, and what to do if not, such as return a string of "No [field_name] provided"
+        # # TODO: Add a value check condition to evaluate if the fields contain values, and what to do if not, such as return a string of "No [field_name] provided"
         
-        for item_tag in item_tag_list[:5]: # limit the results to ten 
-            article_title = item_tag.find('title').text
-            article_description = item_tag.find('description').text
-            clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
+        # FINAL_SLICE = feed_length % 5
+        # print(FINAL_SLICE)
+        # SLICE_MOD = math.floor(feed_length / 5)
+        # print("Slice Mod", SLICE_MOD)
+        
+        # for item_tag in item_tag_list:
+        #     # TODO: Need to eval the length of the tag list, then print 5 results per screen, then the result of (len(list) % 5) will be the value of the last splice operation.
+            
+        #     article_title = item_tag.find('title').text
+        #     article_description = item_tag.find('description').text
+        #     clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
+        #     article_URL = item_tag.find('link').text
+        #     link_text = 'Link'
+        #     hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
 
-            article_URL = item_tag.find('link').text
-            link_text = 'Link'
-            hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
-            # print(hyperlink)
-            # create_table_rows(article_title, article_description, hyperlink)
-            PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
-            PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
-            PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
-        PT.border = False
-        # PT.header = True
-        print(PT) # ! UNCOMMENT ME
-        # TODO Add input() for the user to go back to the feeds menu and choose another feed
+        #     PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
+        #     PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
+        #     PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
+        # PT.border = False
+        # # PT.header = True
+        # print(PT) # ! UNCOMMENT ME
+        # # TODO Add input() for the user to go back to the feeds menu and choose another feed
 
 
 def get_rss_url(feed_url, whocall):
