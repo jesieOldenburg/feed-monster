@@ -104,7 +104,11 @@ def display_feeds_table():
 
 def create_table_rows(title, desc, link):
     PT.add_row([title, desc, link])
-    
+
+def chunk_list(passed_list, n):
+    for i in range(0, len(passed_list), n):
+        yield passed_list[i:i + n]
+
 def display_articles(f_len, f_list):
     # TODO: If the description tag has other tags within it, i.e. an <h1> tag, parse those tags out with a conditional.
         
@@ -115,38 +119,24 @@ def display_articles(f_len, f_list):
     slice_start = 0
     slice_stop = 4
     
-    for index, item_tag in enumerate(f_list[slice_start:slice_stop]):
-        # print("LEN", f_len)
-        # num_of_pages = math.floor(f_len / 5)
-        # print(num_of_pages)
-        if index <= 4:
-            slice_stop = 5
-            slice_start = 0
-            # print("SLICER", slice_stop, index)
-        elif (index > 4 and slice_stop <= f_len) :
-            slice_start = slice_stop
-            slice_stop = slice_stop + 5            
-            print("Start", slice_start)
-            print("Stop", slice_stop)
-            pass
-        elif slice_stop > f_len:
-            slice_stop = f_len - 1
-            print("HEEEY", slice_stop)
-            break
-            pass
+    chunks = list(chunk_list(f_list, 5))
+    
+    for chunk in chunks:
+        # This returns a list of five Elements.
+        print("CHUNK", chunk[0])
+        for item_tag in chunk:
+            # TODO: Need to eval the length of the tag list, then print 5 results per screen, then the result of (len(list) % 5) will be the value of the last splice operation.
             
-        # TODO: Need to eval the length of the tag list, then print 5 results per screen, then the result of (len(list) % 5) will be the value of the last splice operation.
-        
-        article_title = item_tag.find('title').text
-        article_description = item_tag.find('description').text
-        clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
-        article_URL = item_tag.find('link').text
-        link_text = 'Link'
-        hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
+            article_title = item_tag.find('title').text
+            article_description = item_tag.find('description').text
+            clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
+            article_URL = item_tag.find('link').text
+            link_text = 'Link'
+            hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
 
-        PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
-        PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
-        PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
+            PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
+            PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
+            PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
     PT.border = False
     # PT.header = True
     print(PT) # ! UNCOMMENT ME
