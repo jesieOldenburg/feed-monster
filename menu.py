@@ -1,11 +1,10 @@
-import os
+import os, sys
 import re
 import math
 import urllib.request
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
 import shelve
-import pprint
 from prettytable import PrettyTable
 
 PT = PrettyTable()
@@ -31,6 +30,11 @@ def main_menu_logic():
         unsubscribe_menu()
         pass
     if menu_selection == "4":
+        try:
+          sys.exit(0)
+        except SystemExit:
+          os.system('cls' if os.name == 'nt' else 'clear')
+          print("Exited. Thank You For Using Feed Monster !")
         pass
 
 def delete_feed(key):
@@ -72,7 +76,7 @@ def show_subs(whocall):
         
         PT.add_row([item_nums, f_title, f_link])
     SH.close()
-    
+    PT.border = True
     PT.align = "l"
     PT.align["SEL #"] = "c"
     print(PT)
@@ -126,16 +130,12 @@ def print_chunks(*args, **kwargs):
             PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
 
 def display_articles(f_len, f_list):
-    # TODO: If the description tag has other tags within it, i.e. an <h1> tag, parse those tags out with a conditional.
-        
-    # TODO: Get the len() of the item list and display a limited number of results first, then allow the user to scroll through the table, i.e. enter for next page.
-    
     # TODO: Add a value check condition to evaluate if the fields contain values, and what to do if not, such as return a string of "No [field_name] provided"
+    
     chunks = list(chunk_list(f_list, 5))
     PT.border = False
-   
+    
     for i, chunk in enumerate(chunks):
-        print(i == 0)
         os.system('cls' if os.name == 'nt' else 'clear')
         for item_tag in chunk:
             # Iterate over the tags in the chunk
@@ -150,10 +150,15 @@ def display_articles(f_len, f_list):
             PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
             PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
         print(PT)
-        proceed_prompt = input("Press Enter to Display next 5 results")
+        print("Type 'r' To Return to the previous menu")
+        proceed_prompt = input("Press Return/Enter to Display next 5 results \n >>")
+        
+        if proceed_prompt.lower() == 'r':
+            os.system('cls' if os.name == 'nt' else 'clear')
+            PT.clear_rows()
+            show_subs(whocall="main_menu")
+            
         PT.clear_rows()
-    PT.border = False
-    # TODO Add input() for the user to go back to the feeds menu and choose another feed
 
 def display_rss_url_search_menu():
     # TODO Type check the input as a URL
