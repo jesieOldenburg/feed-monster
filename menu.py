@@ -1,4 +1,5 @@
 import os, sys
+import time
 import re
 import math
 import urllib.request
@@ -87,11 +88,18 @@ def show_subs(whocall):
         print("Type 'main' to return to the main menu")
         print('Which Feed would you like to view?')
         choice = input(">> ")
-        if choice.lower() == "main":
-            main_menu_logic()
-        else:
-            url_choice = callable_feeds[choice]
-            pull_subbed_RSS(url_choice)
+        try:
+            if choice.lower() == "main":
+                main_menu_logic()
+            else:
+                url_choice = callable_feeds[choice]
+                pull_subbed_RSS(url_choice)
+        except:
+            print('Sorry, That is not a valid option')
+            time.sleep(3)
+            show_subs(whocall="main_menu")
+
+
 
     if whocall == "unsubscribe_menu":
         print('Which Feed would you like to delete?')
