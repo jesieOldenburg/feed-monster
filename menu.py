@@ -104,54 +104,56 @@ def display_feeds_table():
 
 def create_table_rows(title, desc, link):
     PT.add_row([title, desc, link])
-    
+
+def chunk_list(passed_list, n):
+    for i in range(0, len(passed_list), n):
+        yield passed_list[i:i + n]
+
+def print_chunks(*args, **kwargs):
+    chunk = args[0]
+    for item_tag in chunk:
+            # PT.clear_rows()
+            # Iterate over the tags in the chunk
+            article_title = item_tag.find('title').text
+            article_description = item_tag.find('description').text
+            clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
+            article_URL = item_tag.find('link').text
+            link_text = 'Link'
+            hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
+
+            PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
+            PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
+            PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
+
 def display_articles(f_len, f_list):
     # TODO: If the description tag has other tags within it, i.e. an <h1> tag, parse those tags out with a conditional.
         
     # TODO: Get the len() of the item list and display a limited number of results first, then allow the user to scroll through the table, i.e. enter for next page.
     
     # TODO: Add a value check condition to evaluate if the fields contain values, and what to do if not, such as return a string of "No [field_name] provided"
-    
-    slice_start = 0
-    slice_stop = 4
-    
-    for index, item_tag in enumerate(f_list[slice_start:slice_stop]):
-        # print("LEN", f_len)
-        # num_of_pages = math.floor(f_len / 5)
-        # print(num_of_pages)
-        if index <= 4:
-            slice_stop = 5
-            slice_start = 0
-            # print("SLICER", slice_stop, index)
-        elif (index > 4 and slice_stop <= f_len) :
-            slice_start = slice_stop
-            slice_stop = slice_stop + 5            
-            print("Start", slice_start)
-            print("Stop", slice_stop)
-            pass
-        elif slice_stop > f_len:
-            slice_stop = f_len - 1
-            print("HEEEY", slice_stop)
-            break
-            pass
-            
-        # TODO: Need to eval the length of the tag list, then print 5 results per screen, then the result of (len(list) % 5) will be the value of the last splice operation.
-        
-        article_title = item_tag.find('title').text
-        article_description = item_tag.find('description').text
-        clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
-        article_URL = item_tag.find('link').text
-        link_text = 'Link'
-        hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
-
-        PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
-        PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
-        PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
+    chunks = list(chunk_list(f_list, 5))
     PT.border = False
-    # PT.header = True
-    print(PT) # ! UNCOMMENT ME
+   
+    for i, chunk in enumerate(chunks):
+        print(i == 0)
+        os.system('cls' if os.name == 'nt' else 'clear')
+        for item_tag in chunk:
+            # Iterate over the tags in the chunk
+            article_title = item_tag.find('title').text
+            article_description = item_tag.find('description').text
+            clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
+            article_URL = item_tag.find('link').text
+            link_text = 'Link'
+            hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
+
+            PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
+            PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
+            PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
+        print(PT)
+        proceed_prompt = input("Press Enter to Display next 5 results")
+        PT.clear_rows()
+    PT.border = False
     # TODO Add input() for the user to go back to the feeds menu and choose another feed
-    pass
 
 def display_rss_url_search_menu():
     # TODO Type check the input as a URL
@@ -185,7 +187,7 @@ def parse_XML(xml_str, vURL, whocall):
     feed_link = vURL
     item_tag_list = root.findall('.//item') # Finds all tags named item in the XML response
     feed_length = len(item_tag_list)
-    print("FEED LENGTH =====>", feed_length)
+    
     if whocall == "url_search":
         print("search called me ")
         store_data(feed_provider, feed_link)
