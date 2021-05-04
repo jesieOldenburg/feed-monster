@@ -60,6 +60,7 @@ def unsubscribe_menu():
 
 def show_subs(whocall):
     os.system('cls' if os.name == 'nt' else 'clear')
+    PT.clear_rows()
     PT.field_names = ["SEL #", "RSS Feed Name", "RSS URL" ]
     item_nums = 0 
 
@@ -76,6 +77,7 @@ def show_subs(whocall):
         
         PT.add_row([item_nums, f_title, f_link])
     SH.close()
+    
     PT.border = True
     PT.align = "l"
     PT.align["SEL #"] = "c"
