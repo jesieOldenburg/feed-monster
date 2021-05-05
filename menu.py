@@ -75,29 +75,29 @@ def show_subs(whocall):
         f_link = feed[1]
         
         callable_feeds[str(item_nums)] = f_link
-        
+
         PT.add_row([item_nums, f_title, f_link])
     SH.close()
     
-    PT.border = True
+    PT.border = False
     PT.align = "l"
     PT.align["SEL #"] = "c"
     print(PT)
     
     if whocall == "main_menu":
-        print("Type 'main' to return to the main menu")
+        print("\nType 'main' to return to the main menu")
         print('Which Feed would you like to view?')
-        choice = input(">> ")
-        try:
-            if choice.lower() == "main":
-                main_menu_logic()
-            else:
-                url_choice = callable_feeds[choice]
-                pull_subbed_RSS(url_choice)
-        except:
-            print('Sorry, That is not a valid option')
-            time.sleep(3)
-            show_subs(whocall="main_menu")
+        choice = input("\n>> ")
+        # try:
+        if choice.lower() == "main":
+            main_menu_logic()
+        else:
+            url_choice = callable_feeds[choice]
+            pull_subbed_RSS(url_choice)
+        # except Exception:
+            # print(callable_feeds, 'Sorry, That is not a valid option')
+            # time.sleep(3)
+            # show_subs(whocall="main_menu")
 
 
 
@@ -111,13 +111,9 @@ def show_subs(whocall):
         delete_feed(KEY_TO_DEL)
         pass
 
-def display_feeds_table():
-    PT.field_names = ["Field Descriptions", "Values", "\n"]
-    # print(PT)
-    # pass
 
-def create_table_rows(title, desc, link):
-    PT.add_row([title, desc, link])
+# def create_table_rows(title, desc, link):
+    # PT.add_row([title, desc, link])
 
 def chunk_list(passed_list, n):
     for i in range(0, len(passed_list), n):
@@ -142,7 +138,7 @@ def print_chunks(*args, **kwargs):
 def display_articles(f_len, f_list):
     # TODO: Add a value check condition to evaluate if the fields contain values, and what to do if not, such as return a string of "No [field_name] provided"
     
-    chunks = list(chunk_list(f_list, 5))
+    chunks = list(chunk_list(f_list, 8))
     PT.border = False
     
     for i, chunk in enumerate(chunks):
@@ -150,7 +146,7 @@ def display_articles(f_len, f_list):
         for item_tag in chunk:
             # Iterate over the tags in the chunk
             article_title = item_tag.find('title').text
-            article_description = item_tag.find('description').text
+            article_description = item_tag.find('description').text[:85]
             clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
             article_URL = item_tag.find('link').text
             link_text = 'Link'
@@ -160,13 +156,16 @@ def display_articles(f_len, f_list):
             PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
             PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
         print(PT)
+        print(f"You are viewing screen {i + 1} of {len(chunks)} ")
         print("Type 'r' To Return to the previous menu")
-        proceed_prompt = input("Press Return/Enter to Display next 5 results \n >>")
+        proceed_prompt = input("Press Return/Enter to Display next 5 results \n >> ")
         
         if proceed_prompt.lower() == 'r':
             os.system('cls' if os.name == 'nt' else 'clear')
             PT.clear_rows()
             show_subs(whocall="main_menu")
+        if proceed_prompt.lower() == 'up':
+            pass
             
         PT.clear_rows()
 
@@ -175,7 +174,7 @@ def display_rss_url_search_menu():
     # os.system('cls' if os.name == 'nt' else 'clear')
     print("Enter an RSS URL: \n")
     RSS_URL_input = input('>> ') # Don't forget to change this back to regular input (>>) after testing
-    get_rss_url(feed_to_search, whocall="url_search") # change this back to this: get_rss_url(RSS_URL_input)
+    get_rss_url(RSS_URL_input, whocall="url_search") # change this back to this: get_rss_url(RSS_URL_input)
     pass
 
 feed_to_search = "http://rss.cnn.com/rss/edition_world.rss"
@@ -204,11 +203,9 @@ def parse_XML(xml_str, vURL, whocall):
     feed_length = len(item_tag_list)
     
     if whocall == "url_search":
-        print("search called me ")
         store_data(feed_provider, feed_link)
-        
         print("Would you like to add another RSS URL?","\n Y/n?")
-        choice = input("")
+        choice = input(">> ")
         
         if choice.lower() == 'y':
             display_rss_url_search_menu()
@@ -217,39 +214,13 @@ def parse_XML(xml_str, vURL, whocall):
 
     if whocall == "pull_subs":
         PT.align = 'l'
-        display_feeds_table()
+        PT.field_names = ["Field Descriptions", "Values", "\n"]
+        PT.border = False
         display_articles(feed_length, item_tag_list)
-        # print('2... pull subs called me')
         # # TODO: If the description tag has other tags within it, i.e. an <h1> tag, parse those tags out with a conditional.
-        
-        # # TODO: Get the len() of the item list and display a limited number of results first, then allow the user to scroll through the table, i.e. enter for next page.
         
         # # TODO: Add a value check condition to evaluate if the fields contain values, and what to do if not, such as return a string of "No [field_name] provided"
         
-        # FINAL_SLICE = feed_length % 5
-        # print(FINAL_SLICE)
-        # SLICE_MOD = math.floor(feed_length / 5)
-        # print("Slice Mod", SLICE_MOD)
-        
-        # for item_tag in item_tag_list:
-        #     # TODO: Need to eval the length of the tag list, then print 5 results per screen, then the result of (len(list) % 5) will be the value of the last splice operation.
-            
-        #     article_title = item_tag.find('title').text
-        #     article_description = item_tag.find('description').text
-        #     clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
-        #     article_URL = item_tag.find('link').text
-        #     link_text = 'Link'
-        #     hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
-
-        #     PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
-        #     PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
-        #     PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
-        # PT.border = False
-        # # PT.header = True
-        # print(PT) # ! UNCOMMENT ME
-        # # TODO Add input() for the user to go back to the feeds menu and choose another feed
-
-
 def get_rss_url(feed_url, whocall):
     """This function accepts an RSS feed URL and fetches an XML response. It then formats the response into a string and passes it to a parser function
 
