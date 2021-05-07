@@ -8,7 +8,12 @@ import xml.etree.ElementTree as ET
 import shelve
 from prettytable import PrettyTable
 
+# Instantiating Classes...
+
 PT = PrettyTable()
+
+"""The following section will handle all of the menu logic, such as menu selections, printing of the menu etc.
+"""
 
 def create_main_menu():        
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -38,6 +43,10 @@ def main_menu_logic():
           print("Exited. Thank You For Using Feed Monster !")
         pass
 
+"""This section handles all of the CRUD of the application...
+"""
+
+
 def delete_feed(key):
     """This function will open an instance of the shelve database file and delete the selected key from the dictionary stored on disk
 
@@ -50,7 +59,11 @@ def delete_feed(key):
     print("FEED DICT KEYY", feed_dict[key])
     del feed_dict[key]
     SH.close()
-    print(feed_dict)
+    choice = input("Delete another feed? Y/n")
+    if choice == "y".lower():
+        unsubscribe_menu()
+    else:
+        main_menu_logic()
     pass
 
 def unsubscribe_menu():
@@ -119,21 +132,21 @@ def chunk_list(passed_list, n):
     for i in range(0, len(passed_list), n):
         yield passed_list[i:i + n]
 
-def print_chunks(*args, **kwargs):
-    chunk = args[0]
-    for item_tag in chunk:
-            # PT.clear_rows()
-            # Iterate over the tags in the chunk
-            article_title = item_tag.find('title').text
-            article_description = item_tag.find('description').text
-            clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
-            article_URL = item_tag.find('link').text
-            link_text = 'Link'
-            hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
+# def print_chunks(*args, **kwargs):
+#     chunk = args[0]
+#     for item_tag in chunk:
+#             # PT.clear_rows()
+#             # Iterate over the tags in the chunk
+#             article_title = item_tag.find('title').text
+#             article_description = item_tag.find('description').text
+#             clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
+#             article_URL = item_tag.find('link').text
+#             link_text = 'Link'
+#             hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
 
-            PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
-            PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
-            PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
+#             PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
+#             PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
+#             PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
 
 def display_articles(f_len, f_list):
     # TODO: Add a value check condition to evaluate if the fields contain values, and what to do if not, such as return a string of "No [field_name] provided"
@@ -228,11 +241,12 @@ def get_rss_url(feed_url, whocall):
         feed_url (string): A url represented as a string
         whocall (string): A keyword argument used in a logical statement
     """    
-    try:
-        with urllib.request.urlopen(feed_url) as response:
+    # xml_response = None
+    # try:
+    with urllib.request.urlopen(feed_url) as response:
             xml_response = response.read()
-    except:
-        print('An exception occurred')
+    # except:
+        # print('An exception occurred')
         # print(xml_response, '\n')
 
     dom = xml.dom.minidom.parseString(xml_response) # Parses the response to a string
@@ -252,7 +266,6 @@ def get_rss_url(feed_url, whocall):
     
 def pull_subbed_RSS(url):
     os.system('cls' if os.name == 'nt' else 'clear')
-    # print('UUAREELLL')
     feed_to_pull = url
     get_rss_url(feed_to_pull, whocall="pull_subs")
     pass
