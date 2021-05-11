@@ -1,3 +1,4 @@
+import ScreenSet as SS
 import os, sys
 import time
 import re
@@ -45,7 +46,6 @@ def main_menu_logic():
 
 """This section handles all of the CRUD of the application...
 """
-
 
 def delete_feed(key):
     """This function will open an instance of the shelve database file and delete the selected key from the dictionary stored on disk
@@ -111,9 +111,6 @@ def show_subs(whocall):
             # print(callable_feeds, 'Sorry, That is not a valid option')
             # time.sleep(3)
             # show_subs(whocall="main_menu")
-
-
-
     if whocall == "unsubscribe_menu":
         print('Which Feed would you like to delete?')
         feeds_dict_keys_list = list(feeds_dict)
@@ -124,7 +121,6 @@ def show_subs(whocall):
         delete_feed(KEY_TO_DEL)
         pass
 
-
 # def create_table_rows(title, desc, link):
     # PT.add_row([title, desc, link])
 
@@ -132,30 +128,19 @@ def chunk_list(passed_list, n):
     for i in range(0, len(passed_list), n):
         yield passed_list[i:i + n]
 
-# def print_chunks(*args, **kwargs):
-#     chunk = args[0]
-#     for item_tag in chunk:
-#             # PT.clear_rows()
-#             # Iterate over the tags in the chunk
-#             article_title = item_tag.find('title').text
-#             article_description = item_tag.find('description').text
-#             clean_desc = re.sub("(<img.*?>)", "", article_description, 0, re.IGNORECASE | re.DOTALL | re.MULTILINE)
-#             article_URL = item_tag.find('link').text
-#             link_text = 'Link'
-#             hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
-
-#             PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
-#             PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
-#             PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
-
 def display_articles(f_len, f_list):
-    # TODO: Add a value check condition to evaluate if the fields contain values, and what to do if not, such as return a string of "No [field_name] provided"
     
     chunks = list(chunk_list(f_list, 8))
     PT.border = False
     
     for i, chunk in enumerate(chunks):
+        screen_list = list()
+        screen_state = {
+            i : screen_list
+        }
+        print(screen_state[i])
         os.system('cls' if os.name == 'nt' else 'clear')
+
         for item_tag in chunk:
             # Iterate over the tags in the chunk
             article_title = item_tag.find('title').text
@@ -165,9 +150,13 @@ def display_articles(f_len, f_list):
             link_text = 'Link'
             hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
 
+            screen_list.append(SS.ScreenSet(article_title, article_description, hyperlink))
+            # print(screen_list)
+            
             PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
             PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
             PT.add_row([f"\033[1m Page Link (CMD/Ctrl + Click) :: \033[0m", hyperlink, "\n"])
+        
         print(PT)
         print(f"You are viewing screen {i + 1} of {len(chunks)} ")
         print("Type 'r' To Return to the previous menu")
@@ -185,16 +174,17 @@ def display_articles(f_len, f_list):
 def display_rss_url_search_menu():
     # TODO Type check the input as a URL
     # os.system('cls' if os.name == 'nt' else 'clear')
-    print("Enter an RSS URL: \n")
+    print("Enter an RSS URL: \n Or 'main' to go back to the main menu")
     RSS_URL_input = input('>> ') # Don't forget to change this back to regular input (>>) after testing
-    get_rss_url(RSS_URL_input, whocall="url_search") # change this back to this: get_rss_url(RSS_URL_input)
-    pass
-
-feed_to_search = "http://rss.cnn.com/rss/edition_world.rss"
-# ? 'http://feeds.bbci.co.uk/news/world/rss.xml'
-# ? 'http://www.cbn.com/cbnnews/us/feed/'
-# ? 'https://thewest.com.au/rss-feeds'
-# ? 'https://www.nytimes.com/svc/collections/v1/publish/https://www.nytimes.com/section/world/rss.xml'
+    try:
+        if RSS_URL_input == "main".lower():
+            main_menu_logic()
+        get_rss_url(RSS_URL_input, whocall="url_search") # change this back to this: get_rss_url(RSS_URL_input)
+    except Exception as e:
+        print("Not a valid URL, Try again please")
+        time.sleep(4)
+        os.system('cls' if os.name == 'nt' else 'clear')
+        display_rss_url_search_menu()
 
 def store_data(title, link):
     # Uses shelve to persist data
@@ -205,7 +195,6 @@ def store_data(title, link):
     finally:
         SH.close()
     print("URL ADDED SUCCESSFULLY!!")
-
 
 def parse_XML(xml_str, vURL, whocall):
     # TODO: typecheck the root tag to be <rss>
@@ -253,16 +242,11 @@ def get_rss_url(feed_url, whocall):
     xml_response = dom.toprettyxml() # Prettify the response
     # print(xml_response)
     if whocall == "url_search":
-        print("search called me ")
         parse_XML(xml_response, feed_url, whocall="url_search")
         pass
     if whocall == "pull_subs":
         PT.clear_rows()
         parse_XML(xml_response, feed_url, whocall="pull_subs")
-    #     pass
-    # user_passed_URL = feed_url
-    # tree = ET.parse(pretty_xml)
-    # print(tree)
     
 def pull_subbed_RSS(url):
     os.system('cls' if os.name == 'nt' else 'clear')
