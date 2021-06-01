@@ -128,18 +128,21 @@ def chunk_list(passed_list, n):
     for i in range(0, len(passed_list), n):
         yield passed_list[i:i + n]
 
+
+
 def display_articles(f_len, f_list):
-    
-    chunks = list(chunk_list(f_list, 8))
     PT.border = False
+    chunks = list(chunk_list(f_list, 8))
+    screen_list = list()
     
     for i, chunk in enumerate(chunks):
-        screen_list = list()
         screen_state = {
             i : screen_list
         }
-        print(screen_state[i])
-        os.system('cls' if os.name == 'nt' else 'clear')
+        
+        # print("Screen State", screen_state[i][0])
+        screen_list.clear()
+        # os.system('cls' if os.name == 'nt' else 'clear')
 
         for item_tag in chunk:
             # Iterate over the tags in the chunk
@@ -150,8 +153,9 @@ def display_articles(f_len, f_list):
             link_text = 'Link'
             hyperlink = f"\x1b]8;;{article_URL}\a{link_text}\x1b]8;;\a"
 
-            screen_list.append(SS.ScreenSet(article_title, article_description, hyperlink))
-            # print(screen_list)
+            screen = SS.ScreenSet(article_title, article_description, hyperlink)
+            screen_list.append(screen)
+            print("Screen List >>", screen_list)
             
             PT.add_row([f"\033[1m Article Title :: \033[0m", article_title, ""])
             PT.add_row([f"\033[1m Article Description :: \033[0m", clean_desc, ""])
